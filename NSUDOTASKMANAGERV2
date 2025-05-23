@@ -1,0 +1,217 @@
+$scriptBlock = {
+    [void][System.Threading.Thread]::CurrentThread.SetApartmentState([System.Threading.ApartmentState]::STA)
+
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    function Get-ProcessOwner {
+        param($procId)
+        try {
+            Write-Verbose "Getting owner for PID $procId"
+            $query = "Select * From Win32_Process Where ProcessId = $procId"
+            $processInstance = Get-CimInstance -Query $query -ErrorAction Stop
+            $ownerInfo = $processInstance | Invoke-CimMethod -MethodName GetOwner -ErrorAction Stop
+
+            if ($ownerInfo.Domain -and $ownerInfo.User) {
+                return "$($ownerInfo.Domain)\$($ownerInfo.User)"
+            } elseif ($ownerInfo.User) {
+                return $ownerInfo.User
+            } else {
+                return "N/A"
+            }
+        } catch {
+            return "N/A"
+        }
+    }
+
+    function Get-OwnerCategory {
+        param($owner)
+
+        if ($null -eq $owner -or $owner -eq "N/A") { return "Unknown" }
+
+        if ($owner -match 'SYSTEM' -or $owner -match 'LocalSystem') { return "SYSTEM" }
+        elseif ($owner -match 'TrustedInstaller') { return "TrustedInstaller" }
+        elseif ($owner -match 'Administrators' -or $owner -match 'Admin' -or $owner -match 'S-1-5-32-544') { return "Admin" }
+        else { return "User" }
+    }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "SYSTEM Process Viewer (With Owner and Filtering)"
+    $form.Size = New-Object System.Drawing.Size(950, 600)
+    $form.StartPosition = "CenterScreen"
+
+    $dgv = New-Object System.Windows.Forms.DataGridView
+    $dgv.Dock = "Fill"
+    $dgv.ReadOnly = $true
+    $dgv.SelectionMode = 'FullRowSelect'
+    $dgv.MultiSelect = $false
+    $dgv.AutoSizeColumnsMode = 'Fill'
+
+    $panelFilters = New-Object System.Windows.Forms.Panel
+    $panelFilters.Dock = 'Top'
+    $panelFilters.Height = 40
+
+    $chkSystem = New-Object System.Windows.Forms.CheckBox
+    $chkSystem.Text = "SYSTEM"
+    $chkSystem.Checked = $true
+    $chkSystem.AutoSize = $true
+    $chkSystem.Left = 10
+    $chkSystem.Top = 10
+
+    $chkAdmin = New-Object System.Windows.Forms.CheckBox
+    $chkAdmin.Text = "Admin"
+    $chkAdmin.Checked = $true
+    $chkAdmin.AutoSize = $true
+    $chkAdmin.Left = 90
+    $chkAdmin.Top = 10
+
+    $chkUser = New-Object System.Windows.Forms.CheckBox
+    $chkUser.Text = "User"
+    $chkUser.Checked = $true
+    $chkUser.AutoSize = $true
+    $chkUser.Left = 160
+    $chkUser.Top = 10
+
+    $chkTrusted = New-Object System.Windows.Forms.CheckBox
+    $chkTrusted.Text = "TrustedInstaller"
+    $chkTrusted.Checked = $true
+    $chkTrusted.AutoSize = $true
+    $chkTrusted.Left = 230
+    $chkTrusted.Top = 10
+
+    $btnRefresh = New-Object System.Windows.Forms.Button
+    $btnRefresh.Text = "Refresh"
+    $btnRefresh.Width = 70
+    $btnRefresh.Left = 370
+    $btnRefresh.Top = 5
+
+    $btnExport = New-Object System.Windows.Forms.Button
+    $btnExport.Text = "Save to TXT"
+    $btnExport.Width = 90
+    $btnExport.Left = 450
+    $btnExport.Top = 5
+
+    $lblStatus = New-Object System.Windows.Forms.Label
+    $lblStatus.AutoSize = $true
+    $lblStatus.Dock = "Bottom"
+    $lblStatus.Height = 20
+    $lblStatus.ForeColor = 'DarkGreen'
+    $lblStatus.Text = ""
+
+    $panelFilters.Controls.AddRange(@($chkSystem, $chkAdmin, $chkUser, $chkTrusted, $btnRefresh, $btnExport))
+
+    $form.Controls.Add($dgv)
+    $form.Controls.Add($panelFilters)
+    $form.Controls.Add($lblStatus)
+
+    $global:AllProcesses = @()
+
+    function Load-ProcessList {
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $global:AllProcesses = @()
+            $procList = Get-Process | Sort-Object Id
+            $count = $procList.Count
+            $i = 1
+            foreach ($p in $procList) {
+                $procId = $p.Id
+                $procName = $p.ProcessName
+                $lblStatus.Text = "Processing PID $procId - $procName ($i / $count)..."
+                $form.Refresh()
+                $i++
+
+                $owner = Get-ProcessOwner -procId $procId
+                $cat = Get-OwnerCategory -owner $owner
+                $startTime = "N/A"
+                try {
+                    $startTime = $p.StartTime
+                } catch {}
+
+                $procObj = [PSCustomObject]@{
+                    Id = $procId
+                    ProcessName = $procName
+                    SessionId = $p.SessionId
+                    StartTime = $startTime
+                    Owner = $owner
+                    Category = $cat
+                }
+                $global:AllProcesses += $procObj
+            }
+
+            Update-Grid
+            $lblStatus.Text = "Loaded $($global:AllProcesses.Count) processes at $(Get-Date -Format 'HH:mm:ss')"
+        } catch {
+            $lblStatus.Text = "Error loading processes: $_"
+        }
+        finally {
+            $form.Cursor = [System.Windows.Forms.Cursors]::Default
+        }
+    }
+
+    function Update-Grid {
+        $dgv.SuspendLayout()
+        $dgv.Rows.Clear()
+        $dgv.Columns.Clear()
+
+        $dgv.Columns.Add("Id", "PID") | Out-Null
+        $dgv.Columns.Add("ProcessName", "Process Name") | Out-Null
+        $dgv.Columns.Add("SessionId", "Session ID") | Out-Null
+        $dgv.Columns.Add("StartTime", "Start Time") | Out-Null
+        $dgv.Columns.Add("Owner", "Owner") | Out-Null
+        $dgv.Columns.Add("Category", "Category") | Out-Null
+
+        $filtered = $global:AllProcesses | Where-Object {
+            ($chkSystem.Checked -and $_.Category -eq 'SYSTEM') -or
+            ($chkAdmin.Checked -and $_.Category -eq 'Admin') -or
+            ($chkUser.Checked -and $_.Category -eq 'User') -or
+            ($chkTrusted.Checked -and $_.Category -eq 'TrustedInstaller')
+        }
+
+        foreach ($proc in $filtered) {
+            $rowIndex = $dgv.Rows.Add($proc.Id, $proc.ProcessName, $proc.SessionId, $proc.StartTime, $proc.Owner, $proc.Category)
+            $row = $dgv.Rows[$rowIndex]
+
+            switch ($proc.Category) {
+                'SYSTEM' { $row.DefaultCellStyle.BackColor = [System.Drawing.Color]::LightCoral }
+                'Admin' { $row.DefaultCellStyle.BackColor = [System.Drawing.Color]::LightBlue }
+                'User' { $row.DefaultCellStyle.BackColor = [System.Drawing.Color]::LightGray }
+                'TrustedInstaller' { $row.DefaultCellStyle.BackColor = [System.Drawing.Color]::Plum }
+                default { $row.DefaultCellStyle.BackColor = [System.Drawing.Color]::White }
+            }
+        }
+        $dgv.ResumeLayout()
+    }
+
+    function Export-ToTxt {
+        $filtered = $global:AllProcesses | Where-Object {
+            ($chkSystem.Checked -and $_.Category -eq 'SYSTEM') -or
+            ($chkAdmin.Checked -and $_.Category -eq 'Admin') -or
+            ($chkUser.Checked -and $_.Category -eq 'User') -or
+            ($chkTrusted.Checked -and $_.Category -eq 'TrustedInstaller')
+        }
+
+        $output = $filtered | Format-Table -AutoSize | Out-String
+        $file = "$env:USERPROFILE\Desktop\FilteredProcesses_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+        $output | Set-Content -Path $file
+        $lblStatus.Text = "Saved to $file"
+    }
+
+    $btnRefresh.Add_Click({ Load-ProcessList })
+    $btnExport.Add_Click({ Export-ToTxt })
+
+    $chkSystem.Add_CheckedChanged({ Update-Grid })
+    $chkAdmin.Add_CheckedChanged({ Update-Grid })
+    $chkUser.Add_CheckedChanged({ Update-Grid })
+    $chkTrusted.Add_CheckedChanged({ Update-Grid })
+
+    Load-ProcessList
+
+    [void]$form.ShowDialog()
+}
+
+$encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($scriptBlock.ToString()))
+
+# Update this to your actual NSudoLC.exe path:
+$nsudoPath = "C:\Users\ADA\Desktop\tools\nsudo\x64\NSudoLC.exe"
+
+& $nsudoPath -U:S -P:E powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded
