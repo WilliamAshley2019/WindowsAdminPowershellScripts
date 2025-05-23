@@ -46,7 +46,6 @@ $scriptBlock = {
     function Load-ProcessList {
         try {
             $procs = Get-Process | Select-Object Id, ProcessName, CPU, WS -ErrorAction SilentlyContinue
-            [System.Windows.Forms.MessageBox]::Show("Got $($procs.Count) processes")
 
             $dgv.Columns.Clear()
             $dgv.Rows.Clear()
@@ -74,13 +73,13 @@ $scriptBlock = {
             [System.Windows.Forms.MessageBox]::Show("Please select a process to kill.", "No Selection", "OK", "Warning")
             return
         }
-        $pid = $dgv.SelectedRows[0].Cells["Id"].Value
-        $pname = $dgv.SelectedRows[0].Cells["ProcessName"].Value
-        $confirm = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to kill process '$pname' (PID: $pid)?","Confirm Kill","YesNo","Question")
+        $selectedPid = $dgv.SelectedRows[0].Cells["Id"].Value
+        $selectedName = $dgv.SelectedRows[0].Cells["ProcessName"].Value
+        $confirm = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to kill process '$selectedName' (PID: $selectedPid)?","Confirm Kill","YesNo","Question")
         if ($confirm -eq [System.Windows.Forms.DialogResult]::Yes) {
             try {
-                Stop-Process -Id $pid -Force -ErrorAction Stop
-                $lblStatus.Text = "Killed process '$pname' (PID: $pid) successfully."
+                Stop-Process -Id $selectedPid -Force -ErrorAction Stop
+                $lblStatus.Text = "Killed process '$selectedName' (PID: $selectedPid) successfully."
                 Load-ProcessList
             } catch {
                 [System.Windows.Forms.MessageBox]::Show("Failed to kill process: $_", "Error", "OK", "Error")
@@ -110,8 +109,4 @@ $scriptBlock = {
 $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($scriptBlock.ToString()))
 
 # Launch NSudo as SYSTEM and run the script block
-
-
-------------------FIX THIS PART WITH PROPER PATH -----------------------------------
-
-& "PATH TO NSUDO \nsudo\x64\NSudoLC.exe" -U:S -P:E powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded
+& "C:\Users\ADA\Desktop\tools\nsudo\x64\NSudoLC.exe" -U:S -P:E powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded
