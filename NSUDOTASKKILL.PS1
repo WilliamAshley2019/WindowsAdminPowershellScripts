@@ -110,4 +110,8 @@ $scriptBlock = {
 $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($scriptBlock.ToString()))
 
 # Launch NSudo as SYSTEM and run the script block
-& "C:\Users\ADA\Desktop\tools\nsudo\x64\NSudoLC.exe" -U:S -P:E powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded
+
+
+------------------FIX THIS PART WITH PROPER PATH -----------------------------------
+
+& "PATH TO NSUDO \nsudo\x64\NSudoLC.exe" -U:S -P:E powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded
