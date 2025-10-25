@@ -1,0 +1,23 @@
+# Search parameters
+$searchPath = "C:\"
+$minSizeMB = 500
+
+Write-Host "Scanning $searchPath for files larger than $minSizeMB MB... (this can take a while)" -ForegroundColor Yellow
+
+# Get large files safely
+$files = Get-ChildItem -Path $searchPath -Recurse -ErrorAction SilentlyContinue -File |
+    Where-Object { $_.Length -gt ($minSizeMB * 1MB) } |
+    Sort-Object Length -Descending
+
+foreach ($file in $files) {
+    $sizeMB = [math]::Round($file.Length / 1MB, 2)
+    $color = "Gray"
+
+    if ($sizeMB -ge 1024) {
+        $color = "Blue"   # Over 1GB
+    } elseif ($sizeMB -ge 500) {
+        $color = "Red"    # Between 500MB and 1GB
+    }
+
+    Write-Host ("{0,8} MB  {1}" -f $sizeMB, $file.FullName) -ForegroundColor $color
+}
