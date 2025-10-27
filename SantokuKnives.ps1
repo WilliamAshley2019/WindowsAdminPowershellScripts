@@ -1,28 +1,26 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# === ANIME THEME COLORS & SYMBOLS (Cyber/Neon Aesthetic) === #
+ 
 $theme = @{
-    Background  = [System.Drawing.Color]::FromArgb(20, 20, 30)   # Dark Night Sky/Cyber Black
-    Foreground  = [System.Drawing.Color]::FromArgb(230, 230, 255) # White Text
-    AccentNeon  = [System.Drawing.Color]::FromArgb(0, 255, 255)  # Cyan Neon/Hacker Blue
-    AccentPink  = [System.Drawing.Color]::FromArgb(255, 50, 150) # Magenta/Pink Glow
-    AccentRed   = [System.Drawing.Color]::FromArgb(255, 100, 100) # Warning Red
+    Background  = [System.Drawing.Color]::FromArgb(20, 20, 30)    
+    Foreground  = [System.Drawing.Color]::FromArgb(230, 230, 255)  
+    AccentNeon  = [System.Drawing.Color]::FromArgb(0, 255, 255)  
+    AccentPink  = [System.Drawing.Color]::FromArgb(255, 50, 150)  
+    AccentRed   = [System.Drawing.Color]::FromArgb(255, 100, 100)  
     Font        = New-Object System.Drawing.Font("Consolas", 9)
     FontBold    = New-Object System.Drawing.Font("Consolas", 10, [System.Drawing.FontStyle]::Bold)
 }
-
-# Define standard measurements
+ 
 $ButtonWidth = 150
 $PaddingLeft = 20
 
-# 🚩 FIX: Adjusted vertical offsets to account for two filter rows
-$InputPanelHeight = 170 # Increased panel height to accommodate two rows of controls
-$ButtonTopOffset = 38  # Y-position for Browse button (Row 1)
-$ButtonBottomOffset = 120 # New Y-position for Slice button (Row 3)
-$FilterPanelY = 75     # Y-position for filter panel (Row 2 Start)
-
-# === CREATE FORM === #
+ 
+$InputPanelHeight = 170  
+$ButtonTopOffset = 38   
+$ButtonBottomOffset = 120  
+$FilterPanelY = 75    
+ 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "💻 斬る File Slicer 💻 v7"
 $form.Size = New-Object System.Drawing.Size(900, 650)
@@ -32,23 +30,18 @@ $form.ForeColor = $theme.Foreground
 $form.Font = $theme.Font
 $form.MinimumSize = New-Object System.Drawing.Size(900, 650)
 
-# ===================================================================
-# === LAYOUT PANELS ===
-# ===================================================================
-
-# 1. Input Panel (Top)
+ 
 $inputPanel = New-Object System.Windows.Forms.Panel
 $inputPanel.Dock = 'Top'
-$inputPanel.Height = $InputPanelHeight # <-- Updated Height
+$inputPanel.Height = $InputPanelHeight 
 $inputPanel.BackColor = $theme.Background
-
-# 2. Status Panel (Bottom)
+ 
 $statusPanel = New-Object System.Windows.Forms.Panel
 $statusPanel.Dock = 'Bottom'
 $statusPanel.Height = 30
 $statusPanel.BackColor = $theme.Background
 
-# 3. Results Box (Fills the middle)
+ 
 $txtResults = New-Object System.Windows.Forms.RichTextBox
 $txtResults.Text = "▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀"
 $txtResults.Dock = 'Fill' 
@@ -59,7 +52,7 @@ $txtResults.Font = $theme.Font
 $txtResults.WordWrap = $false
 $txtResults.BorderStyle = 'FixedSingle'
 
-# 4. Status Box (Inside the Status Panel)
+ 
 $txtStatus = New-Object System.Windows.Forms.TextBox
 $txtStatus.Dock = 'Fill' 
 $txtStatus.ReadOnly = $true
@@ -70,11 +63,7 @@ $txtStatus.BorderStyle = 'None'
 $txtStatus.Text = "準備完了... 🍣"
 $statusPanel.Controls.Add($txtStatus)
 
-# ===================================================================
-# === INPUT CONTROLS (Row 1: Path) ===
-# ===================================================================
-
-# --- Browse Button ---
+ 
 $btnBrowse = New-Object System.Windows.Forms.Button
 $btnBrowse.Text = "参照..."
 $btnBrowse.Size = New-Object System.Drawing.Size($ButtonWidth, 29)
@@ -83,8 +72,7 @@ $btnBrowse.BackColor = $theme.AccentPink
 $btnBrowse.ForeColor = $theme.Background
 $btnBrowse.Anchor = 'Top, Right'
 $inputPanel.Controls.Add($btnBrowse)
-
-# --- Path Label ---
+ 
 $lblPath = New-Object System.Windows.Forms.Label
 $lblPath.Text = "対象フォルダ (Target):"
 $lblPath.Location = New-Object System.Drawing.Point($PaddingLeft, 15)
@@ -92,7 +80,6 @@ $lblPath.AutoSize = $true
 $lblPath.ForeColor = $theme.AccentNeon
 $inputPanel.Controls.Add($lblPath)
 
-# --- Path Textbox ---
 $txtPath = New-Object System.Windows.Forms.TextBox
 $txtPath.Width = 500 
 $txtPath.Location = New-Object System.Drawing.Point($PaddingLeft, 40)
@@ -102,11 +89,7 @@ $txtPath.ForeColor = $theme.AccentNeon
 $txtPath.Anchor = 'Top, Left, Right'
 $inputPanel.Controls.Add($txtPath)
 
-# ===================================================================
-# === INPUT CONTROLS (Row 2 & 3: Filters and Search Button) ===
-# ===================================================================
-
-# --- Search Button (Now aligned with the bottom of the filter panel) ---
+ 
 $btnSearch = New-Object System.Windows.Forms.Button
 $btnSearch.Text = "切断 ❖"
 $btnSearch.Size = New-Object System.Drawing.Size($ButtonWidth, 29)
@@ -117,20 +100,20 @@ $btnSearch.Font = $theme.FontBold
 $btnSearch.Anchor = 'Top, Right'
 $inputPanel.Controls.Add($btnSearch)
 
-# --- Filters (FlowLayoutPanel) ---
+ 
 $filterPanel = New-Object System.Windows.Forms.FlowLayoutPanel
 $filterPanel.Location = New-Object System.Drawing.Point($PaddingLeft, $FilterPanelY)
-$filterPanel.Height = 80 # Doubled height to allow two rows of filters before the button
+$filterPanel.Height = 80  
 $filterPanel.FlowDirection = 'LeftToRight'
-$filterPanel.WrapContents = $true # Allow wrapping onto the second line
+$filterPanel.WrapContents = $true  
 $filterPanel.Anchor = 'Top, Left, Right' 
 $inputPanel.Controls.Add($filterPanel)
 
-# Define margins for spacing
+ 
 $labelMargin = New-Object System.Windows.Forms.Padding(0, 8, 3, 0)
 $boxMargin = New-Object System.Windows.Forms.Padding(0, 5, 10, 0)
 
-# --- Min Size ---
+ 
 $lblSizeMin = New-Object System.Windows.Forms.Label
 $lblSizeMin.Text = "最小サイズ (Min MB):"
 $lblSizeMin.AutoSize = $true
@@ -146,7 +129,7 @@ $txtSizeMin.BackColor = $theme.Background
 $txtSizeMin.ForeColor = $theme.AccentPink
 $filterPanel.Controls.Add($txtSizeMin) 
 
-# --- Max Size ---
+ 
 $lblSizeMax = New-Object System.Windows.Forms.Label
 $lblSizeMax.Text = "最大サイズ (Max MB):"
 $lblSizeMax.AutoSize = $true
@@ -162,15 +145,14 @@ $txtSizeMax.BackColor = $theme.Background
 $txtSizeMax.ForeColor = $theme.AccentPink
 $filterPanel.Controls.Add($txtSizeMax) 
 
-# --- Date Checkbox ---
+ 
 $chkEnableDate = New-Object System.Windows.Forms.CheckBox
 $chkEnableDate.Text = "日付フィルタ (Date Filter):"
 $chkEnableDate.AutoSize = $true
 $chkEnableDate.ForeColor = $theme.AccentNeon
 $chkEnableDate.Margin = $labelMargin
 $filterPanel.Controls.Add($chkEnableDate)
-
-# --- Date Time Picker (Calendar) ---
+ 
 $dtpDate = New-Object System.Windows.Forms.DateTimePicker
 $dtpDate.Format = [System.Windows.Forms.DateTimePickerFormat]::Custom
 $dtpDate.CustomFormat = 'yyyy-MM-dd'
@@ -184,45 +166,31 @@ $dtpDate.BackColor = $theme.Background
 $dtpDate.ForeColor = $theme.AccentNeon
 $filterPanel.Controls.Add($dtpDate)
 
-# --- Event to enable/disable calendar ---
+ 
 $chkEnableDate.Add_Click({
     $dtpDate.Enabled = $chkEnableDate.Checked
 })
 
-# ===================================================================
-# === ADD PANELS AND RESULTS TO FORM ===
-# ===================================================================
+ 
 $form.Controls.Add($txtResults)
 $form.Controls.Add($inputPanel)
 $form.Controls.Add($statusPanel)
 
-# ===================================================================
-# === FORM LOAD EVENT HANDLER (The layout fix) ===
-# ===================================================================
-
+ 
 $form.Add_Load({
-    # Calculate the X-coordinate for the right-aligned buttons
+ 
     $RightX = $form.Width - $ButtonWidth - $PaddingLeft - 15
-
-    # 1. Position the Browse Button (Stays in Row 1)
+ 
     $btnBrowse.Location = New-Object System.Drawing.Point($RightX, $ButtonTopOffset)
-
-    # 2. Position the Search Button (Now in Row 3, below the filters)
+  
     $btnSearch.Location = New-Object System.Drawing.Point($RightX, $ButtonBottomOffset)
-
-    # 3. Set the initial width of the Path box
+ 
     $txtPath.Width = $btnBrowse.Left - $PaddingLeft - $PaddingLeft
-
-    # 4. Set the initial width of the Filter Panel
-    # The filter panel now has room below it for the Slice button
+ 
     $filterPanel.Width = $btnSearch.Left - $PaddingLeft
 })
 
-# ===================================================================
-# === EVENT HANDLERS (SEARCH LOGIC - Unchanged) ===
-# ===================================================================
-
-# === FOLDER BROWSER === #
+ 
 $btnBrowse.Add_Click({
     $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
     $dialog.Description = "Select the folder to slice..."
@@ -231,7 +199,7 @@ $btnBrowse.Add_Click({
     }
 })
 
-# === SEARCH BUTTON CLICK EVENT === #
+ 
 $btnSearch.Add_Click({
     $txtResults.Clear()
     $txtStatus.Text = "プロセス開始... (Starting search...)"
@@ -271,7 +239,7 @@ $btnSearch.Add_Click({
     $matchCount = 0
     $total = $files.Count
     
-    # Write the stylish separator before results
+ 
     $txtResults.SelectionColor = $theme.AccentNeon
     $txtResults.AppendText("======================================================================================`r`n")
     $txtResults.SelectionColor = $theme.AccentNeon
@@ -287,7 +255,7 @@ $btnSearch.Add_Click({
             $form.Refresh()
         }
 
-        # Apply filters
+ 
         if ($file.Length -lt $minSizeBytes) { continue }
         if ($file.Length -gt $maxSizeBytes) { continue }
         if ($dateParsed -ne $null -and $file.LastWriteTime -lt $dateParsed) { continue }
@@ -295,19 +263,19 @@ $btnSearch.Add_Click({
         $matchCount++
         $sizeMB = [math]::Round($file.Length / 1MB, 2)
         
-        # === Themed Color Logic ===
+  
         $color = $theme.AccentNeon
         if ($sizeMB -ge 1024) { $color = $theme.AccentRed } 
         elseif ($sizeMB -ge 500) { $color = $theme.AccentPink } 
 
-        # === Write nicely formatted output === #
+ 
         $dateString = $file.LastWriteTime.ToString("yyyy/MM/dd HH:mm")
         $line = "{0,10:N2} MB | {1,-20} | {2}`r`n" -f $sizeMB, $dateString, $file.FullName
         $start = $txtResults.TextLength
         $txtResults.AppendText($line)
         $end = $txtResults.TextLength
         
-        # Apply color to the Size and Date parts only
+ 
         $txtResults.Select($start, 29)
         $txtResults.SelectionColor = $color 
         
@@ -324,6 +292,6 @@ $btnSearch.Add_Click({
     }
 })
 
-# === SHOW FORM === #
+ 
 $form.Add_Shown({ $form.Activate() }) 
 [void]$form.ShowDialog()
