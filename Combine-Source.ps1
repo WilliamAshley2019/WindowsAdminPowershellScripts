@@ -12,7 +12,7 @@ param(
 )
 
 # Default target folder
-$defaultPath = "C:\Development\JUCE\InstaComposerClone\Source"
+$defaultPath = "ENTER YOUR SOURCE LOCATION HERE"
 
 # Prompt for folder if not provided inline
 if ([string]::IsNullOrWhiteSpace($SourceFolder)) {
